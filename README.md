@@ -36,7 +36,25 @@ Adaptive learning platform for JEE/KCET coaching institutes, starting with organ
 ### Prerequisites
 
 - Node.js 18+
-- PostgreSQL running locally
+- PostgreSQL 14+
+
+#### Install PostgreSQL
+
+**macOS (Homebrew):**
+```bash
+brew install postgresql@16
+brew services start postgresql@16
+```
+
+**Ubuntu / Debian:**
+```bash
+sudo apt update
+sudo apt install -y postgresql postgresql-contrib
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
+```
+
+**Windows:** Download the installer from [postgresql.org/download/windows](https://www.postgresql.org/download/windows/) and run it. The installer sets up the service automatically.
 
 > **Note (Zed editor users):** Zed bundles its own Node. Prefix every terminal command with:
 > ```bash
@@ -53,9 +71,7 @@ npm install
 
 ### 2. Create the database
 
-```bash
-psql -U postgres
-```
+Open a PostgreSQL shell. On Linux you may need `sudo -u postgres psql`; on macOS/Windows just `psql -U postgres`.
 
 ```sql
 CREATE USER kea WITH PASSWORD 'yourpassword';
@@ -63,9 +79,11 @@ CREATE DATABASE kea OWNER kea;
 \q
 ```
 
+You can use any username and password you like instead of `kea` / `yourpassword` — just use the same values in `.env.local` in the next step.
+
 ### 3. Configure environment
 
-Create `.env.local` in the project root:
+Create `.env.local` in the project root, substituting the username and password you chose above:
 
 ```env
 DATABASE_URL="postgresql://kea:yourpassword@localhost:5432/kea"
