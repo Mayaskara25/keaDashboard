@@ -1,0 +1,310 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── ENUMS ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum QuestionType {
+  MCQ
+  NUMERICAL
+  ASSERTION_REASON
+  MATRIX_MATCH
+  INTEGER_ANSWER
+}
+
+enum TestType {
+  CUSTOM
+  ADAPTIVE
+  PYQ
+}
+
+enum Exam {
+  KCET
+  JEE_MAINS
+  JEE_ADVANCED
+  COMEDK
+  GENERAL
+}
+
+enum BloomsLevel {
+  REMEMBER
+  UNDERSTAND
+  APPLY
+  ANALYZE
+  EVALUATE
+}
+
+enum Skill {
+  CONCEPT_RECALL
+  MECHANISM_UNDERSTANDING
+  PRODUCT_PREDICTION
+  FORMULA_APPLICATION
+  NUMERICAL_SOLVING
+  MULTI_STEP_REASONING
+  GRAPH_INTERPRETATION
+  ISOMER_CLASSIFICATION
+  EXPERIMENTAL_ANALYSIS
+  UNIT_CONVERSION
+}
+
+enum QuestionStatus {
+  PENDING
+  UNDER_REVIEW
+  VERIFIED
+  ARCHIVED
+}
+
+enum SessionStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+enum ResourceType {
+  NOTES
+  VIDEO
+  PDF
+  ASSIGNMENT
+  PRACTICE_SET
+  RECORDED_LECTURE
+  EXTERNAL_LINK
+}
+
+enum DifficultyRange {
+  EASY
+  MEDIUM
+  HARD
+  MIXED
+}
+
+// ─── STATIC TABLES ────────────────────────────────────────────────────────────
+
+model Institute {
+  id           String   @id @default(uuid())
+  name         String
+  address      String?
+  contactEmail String   @unique
+  createdAt    DateTime @default(now())
+
+  users     User[]
+  batches   Batch[]
+  questions Question[]
+  tests     Test[]
+  resources Resource[]
+}
+
+model User {
+  id           String   @id @default(uuid())
+  instituteId  String
+  batchId      String?
+  role         Role
+  name         String
+  email        String   @unique
+  passwordHash String
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  institute       Institute      @relation(fields: [instituteId], references: [id])
+  batch           Batch?         @relation(fields: [batchId], references: [id])
+  testSessions    TestSession[]
+  attempts        Attempt[]
+  masteryRecords  StudentMastery[]
+  verifiedQuestions Question[]   @relation("VerifiedBy")
+  taughtBatches   Batch[]        @relation("TeacherBatches")
+}
+
+model Batch {
+  id           String   @id @default(uuid())
+  instituteId  String
+  teacherId    String
+  name         String
+  subject      String
+  academicYear String
+  createdAt    DateTime @default(now())
+
+  institute Institute @relation(fields: [instituteId], references: [id])
+  teacher   User      @relation("TeacherBatches", fields: [teacherId], references: [id])
+  students  User[]
+}
+
+model ConceptTaxonomy {
+  id                String          @id @default(cuid())
+  conceptId         String          @unique
+  subject           String
+  chapter           String
+  topic             String
+  subtopic          String?
+  parentConceptId   String?
+  prerequisites     String[]
+  difficultyRange   DifficultyRange @default(MIXED)
+  createdAt         DateTime        @default(now())
+
+  parent       ConceptTaxonomy?   @relation("ConceptParent", fields: [parentConceptId], references: [conceptId])
+  children     ConceptTaxonomy[]  @relation("ConceptParent")
+  questions    Question[]
+  resources    Resource[]
+  masteryRecords StudentMastery[]
+}
+
+model Question {
+  id          String @id @default(uuid())
+  instituteId String
+
+  // Academic
+  conceptId          String
+  secondaryConceptIds String[]
+  skill              Skill
+  subSkill           String?
+  exam               Exam     @default(GENERAL)
+  year               Int?
+
+  // Question content (LaTeX supported)
+  questionType   QuestionType
+  questionText   String
+  options        Json?
+  correctOption  String
+  explanation    String
+
+  // Classification
+  difficultyAi      Int       @default(3)
+  difficultyActual  Float?
+  bloomsLevel       BloomsLevel
+  expectedTimeSec   Int       @default(90)
+  knowledgeElements Int       @default(1)
+  conceptCount      Int       @default(1)
+  reasoningSteps    Int       @default(1)
+  isMultiConcept    Boolean   @default(false)
+
+  // Misconceptions
+  misconceptions String[]
+
+  // Relationships
+  easierQuestions  String[]
+  similarQuestions String[]
+  harderQuestions  String[]
+
+  // System
+  status       QuestionStatus @default(PENDING)
+  source       String?
+  version      Int            @default(1)
+  verifiedById String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  institute  Institute       @relation(fields: [instituteId], references: [id])
+  concept    ConceptTaxonomy @relation(fields: [conceptId], references: [conceptId])
+  verifiedBy User?           @relation("VerifiedBy", fields: [verifiedById], references: [id])
+  attempts   Attempt[]
+}
+
+model Resource {
+  id          String       @id @default(uuid())
+  instituteId String
+  conceptId   String
+  title       String
+  type        ResourceType
+  subject     String
+  chapter     String
+  topic       String
+  urlOrFile   String
+  createdAt   DateTime     @default(now())
+
+  institute Institute       @relation(fields: [instituteId], references: [id])
+  concept   ConceptTaxonomy @relation(fields: [conceptId], references: [conceptId])
+}
+
+model Test {
+  id          String   @id @default(uuid())
+  instituteId String
+  teacherId   String
+  title       String
+  description String?
+  type        TestType
+
+  subject         String
+  chapters        String[]
+  durationMinutes Int
+  totalMarks      Int
+  questionIds     String[]
+  markingScheme   Json
+
+  // PYQ only
+  exam  Exam?
+  year  Int?
+  paper String?
+
+  // Adaptive only
+  targetConceptIds String[]
+  generatedFor     String?
+
+  createdAt DateTime @default(now())
+
+  institute    Institute     @relation(fields: [instituteId], references: [id])
+  testSessions TestSession[]
+}
+
+// ─── DYNAMIC TABLES ───────────────────────────────────────────────────────────
+
+model TestSession {
+  id          String        @id @default(uuid())
+  studentId   String
+  testId      String
+  startedAt   DateTime      @default(now())
+  submittedAt DateTime?
+  totalScore  Float?
+  maxScore    Int
+  status      SessionStatus @default(IN_PROGRESS)
+
+  weakTopicsTargeted String[]
+
+  student  User      @relation(fields: [studentId], references: [id])
+  test     Test      @relation(fields: [testId], references: [id])
+  attempts Attempt[]
+}
+
+model Attempt {
+  id            String   @id @default(uuid())
+  instituteId   String
+  studentId     String
+  questionId    String
+  testSessionId String
+  selectedOption String?
+  isCorrect     Boolean
+  marksAwarded  Float
+  timeTakenSec  Int
+  skipped       Boolean  @default(false)
+  submittedAt   DateTime @default(now())
+
+  student     User        @relation(fields: [studentId], references: [id])
+  question    Question    @relation(fields: [questionId], references: [id])
+  testSession TestSession @relation(fields: [testSessionId], references: [id])
+}
+
+model StudentMastery {
+  id                String   @id @default(uuid())
+  studentId         String
+  conceptId         String
+  skill             Skill
+  masteryScore      Float    @default(0)
+  confidence        Float    @default(0)
+  questionsAttempted Int     @default(0)
+  questionsCorrect  Int      @default(0)
+  avgTimeSec        Float    @default(0)
+  lastUpdated       DateTime @default(now())
+
+  student User            @relation(fields: [studentId], references: [id])
+  concept ConceptTaxonomy @relation(fields: [conceptId], references: [conceptId])
+
+  @@unique([studentId, conceptId, skill])
+}

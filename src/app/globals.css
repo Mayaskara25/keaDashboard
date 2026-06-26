@@ -1,26 +1,103 @@
 @import "tailwindcss";
 
+/* ─── DESIGN TOKENS ──────────────────────────────────────────────────────── */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #ffffff;
+  --bg-subtle: #f3f5f7;
+  --text: #181818;
+  --text-muted: #5c5c5c;
+  --border: #e5e9f2;
+  --accent: #0176d3;
+  --accent-hover: #0161b0;
+  --shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --radius: 6px;
+  --font: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+  --success: #2e7d32;
+  --success-bg: #f0fdf4;
+  --warning: #b45309;
+  --warning-bg: #fffbeb;
+  --danger: #c62828;
+  --danger-bg: #fef2f2;
 }
+
+[data-theme="dark"] {
+  --bg: #1a1f2c;
+  --bg-subtle: #222838;
+  --text: #f4f6f9;
+  --text-muted: #aeb6c2;
+  --border: #2e3545;
+  --accent: #3b9ede;
+  --accent-hover: #5baee4;
+  --shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
+  --success: #4caf50;
+  --success-bg: #1a2e1a;
+  --warning: #f59e0b;
+  --warning-bg: #2a2010;
+  --danger: #ef5350;
+  --danger-bg: #2a1515;
+}
+
+/* ─── TAILWIND V4 THEME REGISTRATION ─────────────────────────────────────── */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-subtle: var(--bg-subtle);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-tx: var(--text);
+  --color-muted: var(--text-muted);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --font-sans: var(--font);
+  --shadow-card: var(--shadow);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ─── BASE RESET ─────────────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  line-height: 1.5;
+  min-height: 100vh;
+  font-size: 14px;
+}
+
+html:not([data-theme]) {
+  background-color: #ffffff;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 0;
 }
