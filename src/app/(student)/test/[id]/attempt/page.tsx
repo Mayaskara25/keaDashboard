@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { Timer } from "@/components/test/timer";
 import { Button } from "@/components/ui/button";
+import { LatexText } from "@/components/ui/latex";
 import { Flag, ChevronLeft, ChevronRight } from "lucide-react";
 
 type Question = {
@@ -172,7 +173,7 @@ export default function AttemptPage() {
           {currentQ && (
             <div className="max-w-2xl">
               <p className="text-[15px] leading-relaxed text-[var(--text)] mb-6 whitespace-pre-wrap">
-                {currentQ.questionText}
+                <LatexText text={currentQ.questionText} />
               </p>
 
               {currentQ.options && (
@@ -192,7 +193,7 @@ export default function AttemptPage() {
                         )}
                       >
                         <span className="font-semibold w-5 shrink-0">{key}.</span>
-                        <span>{opt}</span>
+                        <LatexText text={opt} />
                       </button>
                     );
                   })}

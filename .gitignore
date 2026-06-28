@@ -41,3 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# question classifier tool outputs
+/tools/question-classifier/output/
+/tools/question-classifier/node_modules/

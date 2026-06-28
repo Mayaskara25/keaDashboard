@@ -22,6 +22,12 @@
  * ]
  */
 
+import { config } from "dotenv";
+import { resolve } from "path";
+// Next.js auto-loads .env.local; tsx does not — load manually
+config({ path: resolve(process.cwd(), ".env.local") });
+config({ path: resolve(process.cwd(), ".env") });
+
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { readFileSync } from "fs";
